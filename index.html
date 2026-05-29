@@ -1691,7 +1691,7 @@
               <input type="file" id="file-input" accept="image/*" style="display: none;">
               <label for="file-input" class="upload-label">
                 <i class="material-icons" style="color: var(--secondary); font-size: 32px;">cloud_upload</i>
-                <div><strong>Fotoğraf Yükle</strong> veya buraya sürükleyin</div>
+                <div><strong>Fotoğraf Çek</strong> veya buraya sürükleyin</div>
                 <span style="font-size: 11px; color: var(--text-muted);">PNG, JPG</span>
               </label>
 
@@ -2414,11 +2414,23 @@
 
       if (cameraStream) {
         const canvas = document.createElement('canvas');
-        canvas.width = videoEl.videoWidth;
-        canvas.height = videoEl.videoHeight;
+        let width = videoEl.videoWidth || 1280;
+        let height = videoEl.videoHeight || 720;
+        const maxDim = 1280;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoEl, 0, 0);
-        selectedImageSrc = canvas.toDataURL('image/jpeg');
+        ctx.drawImage(videoEl, 0, 0, width, height);
+        selectedImageSrc = canvas.toDataURL('image/jpeg', 0.85);
       } else {
         selectedImageSrc = createMockReceiptImage();
       }
@@ -2646,7 +2658,37 @@
     }
 
     function startOCRScanning(imageSrc) {
-      runActualOCRFlow(imageSrc);
+      // Büyük resimleri performansı ve hafıza tüketimini korumak için yeniden boyutlandır
+      const img = new Image();
+      img.onload = function() {
+        const maxDim = 1280;
+        if (img.width > maxDim || img.height > maxDim) {
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const resizedSrc = canvas.toDataURL('image/jpeg', 0.85);
+          runActualOCRFlow(resizedSrc);
+        } else {
+          runActualOCRFlow(imageSrc);
+        }
+      };
+      img.onerror = function() {
+        runActualOCRFlow(imageSrc);
+      };
+      img.src = imageSrc;
     }
 
     function runActualOCRFlow(imageSrc) {
@@ -2691,12 +2733,30 @@
           return;
         }
 
+        let hasFinished = false;
+
+        const ocrTimeout = setTimeout(() => {
+          if (!hasFinished) {
+            hasFinished = true;
+            console.warn("OCR Süresi aşıldı (6 saniye). Simülasyon moduna geçiliyor...");
+            showToast("Bağlantı yavaş, akıllı simülasyon başlatılıyor...");
+            
+            // Clean up UI classes so they are shown correctly in simulator
+            step2.className = 'process-step done';
+            step3.className = 'process-step done';
+            step4.className = 'process-step active';
+            
+            runSimulatedOcr(step2, step3, step4, processingCard, formCard);
+          }
+        }, 6000);
+
         // Adım 2 ve 3: Tesseract ile Gerçek Zamanlı OCR
         Tesseract.recognize(
           imageSrc,
           'tur+eng', // Türkçe ve İngilizce desteği
           {
             logger: m => {
+              if (hasFinished) return;
               if (m.status === 'recognizing text') {
                 const progressPercent = Math.round(m.progress * 100);
                 step3.classList.add('active');
@@ -2707,6 +2767,10 @@
             }
           }
         ).then(({ data: { text } }) => {
+          if (hasFinished) return;
+          hasFinished = true;
+          clearTimeout(ocrTimeout);
+
           step3.querySelector('span').innerText = 'Yapay zeka ile metin analizi tamamlandı.';
           step3.classList.remove('active');
           step3.classList.add('done');
@@ -2740,6 +2804,10 @@
             showToast("Fiş başarıyla analiz edildi!");
           }, 100);
         }).catch(err => {
+          if (hasFinished) return;
+          hasFinished = true;
+          clearTimeout(ocrTimeout);
+
           console.error("OCR Hatalı, simüle veriye geçiliyor:", err);
           runSimulatedOcr(step2, step3, step4, processingCard, formCard);
         });
