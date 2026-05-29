@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">import 'package:flutter/material.dart';</p>
+<p class="p2"><br></p>
+<p class="p1">class SahaDashboard extends StatelessWidget {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const SahaDashboard({super.key});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>@override</p>
+<p class="p1"><span class="Apple-converted-space">  </span>Widget build(BuildContext context) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return Scaffold(</p>
+<p class="p1"><span class="Apple-converted-space">      </span>appBar: AppBar(</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: const Text("Muhasebe Saha"),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>backgroundColor: Colors.blue.shade900,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>floatingActionButton: FloatingActionButton.extended(</p>
+<p class="p1"><span class="Apple-converted-space">        </span>onPressed: () {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>Navigator.push(context, MaterialPageRoute(builder: (_) =&gt; const CameraScreen()));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>icon: const Icon(Icons.camera_alt, size: 28),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>label: const Text("Fiş Fotoğrafla", style: TextStyle(fontSize: 16)),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>backgroundColor: Colors.blue.shade700,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>elevation: 12,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>body: const Center(</p>
+<p class="p1"><span class="Apple-converted-space">        </span>child: Column(</p>
+<p class="p1"><span class="Apple-converted-space">          </span>mainAxisAlignment: MainAxisAlignment.center,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>children: [</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Icon(Icons.receipt_long, size: 120, color: Colors.blue),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>SizedBox(height: 20),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Text(</p>
+<p class="p1"><span class="Apple-converted-space">              </span>"Saha Modu\nHazır",</p>
+<p class="p1"><span class="Apple-converted-space">              </span>textAlign: TextAlign.center,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>SizedBox(height: 10),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Text("Fiş fotoğraflamak için\n+ butonuna basın",<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                 </span>textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),</p>
+<p class="p1"><span class="Apple-converted-space">          </span>],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+</body>
+</html>
