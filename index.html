@@ -1481,6 +1481,47 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <!-- jsQR (İstemci tabanlı gerçek zamanlı Karekod okuma motoru) -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  
+  <!-- CDN Yedekli Yükleyici (Telefonlarda kütüphanelerin açılmasını garanti altına alır) -->
+  <script>
+    function loadScript(primaryUrl, fallbackUrl) {
+      return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = primaryUrl;
+        script.onload = () => resolve(true);
+        script.onerror = () => {
+          console.warn("Birincil CDN başarısız, yedek CDN deneniyor:", fallbackUrl);
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = fallbackUrl;
+          fallbackScript.onload = () => resolve(true);
+          fallbackScript.onerror = () => {
+            console.error("Yedek CDN de başarısız oldu!");
+            resolve(false);
+          };
+          document.head.appendChild(fallbackScript);
+        };
+        document.head.appendChild(script);
+      });
+    }
+
+    // Tesseract ve jsQR kütüphanelerini yedekli yükle
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Tesseract.js Yüklemesi
+      if (typeof Tesseract === 'undefined') {
+        await loadScript(
+          "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+          "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.0/tesseract.min.js"
+        );
+      }
+      // jsQR Yüklemesi
+      if (typeof jsQR === 'undefined') {
+        await loadScript(
+          "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js",
+          "https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"
+        );
+      }
+    });
+  </script>
 </head>
 <body>
 
@@ -2408,8 +2449,13 @@
       let kdv = '%20';
 
       try {
-        if (text.startsWith('http://') || text.startsWith('https://')) {
-          const urlObj = new URL(text);
+        let urlParamsText = text;
+        if (!text.startsWith('http://') && !text.startsWith('https://') && text.includes('=')) {
+          urlParamsText = 'https://fake.com/?' + text;
+        }
+
+        if (urlParamsText.startsWith('http://') || urlParamsText.startsWith('https://')) {
+          const urlObj = new URL(urlParamsText);
           const params = new URLSearchParams(urlObj.search);
           
           const dParam = params.get('d') || params.get('tarih');
