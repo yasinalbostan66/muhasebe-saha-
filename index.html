@@ -1636,7 +1636,7 @@
             
             <!-- Sol Panel: Vizör Ekranı -->
             <div id="visor-container" class="camera-viewport">
-              <video id="camera-stream" autoplay playsinline></video>
+              <video id="camera-stream" autoplay playsinline muted></video>
               
               <div class="camera-overlay">
                 <div id="visor-guide" class="guide-box">
@@ -2486,12 +2486,33 @@
 
     async function initCamera() {
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("Tarayıcı WebRTC (kamera erişimi) veya güvenli bağlantı (HTTPS) desteklemiyor.");
+        }
+
+        // Akıllı arka kamera (environment) seçimi için ideal kısıtlamalar kullanıyoruz
+        // Bu kısıtlamalar ön kamerası olan laptoplarda OverconstrainedError oluşmasını engeller.
+        const constraints = {
+          video: { facingMode: { ideal: 'environment' } },
           audio: false
-        });
+        };
+        
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (e) {
+          console.warn("Arka kamera (environment) kısıtlaması başarısız oldu, varsayılan kamera deneniyor...", e);
+          // Fallback zinciri: Cihazın varsayılan kamerasını aç
+          cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
         
         videoEl.srcObject = cameraStream;
+        videoEl.setAttribute('playsinline', true);
+        videoEl.setAttribute('autoplay', true);
+        videoEl.setAttribute('muted', true);
+        
+        // iOS Safari için oynatmayı garantiye alalım
+        await videoEl.play();
+        
         videoEl.style.display = 'block';
         fallbackUi.style.display = 'none';
         
@@ -2501,6 +2522,7 @@
         console.warn("Kameraya erişilemedi, simülatör modu devrede:", err);
         videoEl.style.display = 'none';
         fallbackUi.style.display = 'flex';
+        showToast("Kamera açılamadı, simülatör devrede.");
       }
     }
 
