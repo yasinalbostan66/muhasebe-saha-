@@ -2293,8 +2293,6 @@
           throw new Error("Tarayıcı WebRTC (kamera erişimi) veya güvenli bağlantı (HTTPS) desteklemiyor.");
         }
 
-        // Akıllı arka kamera (environment) seçimi için ideal kısıtlamalar kullanıyoruz
-        // Bu kısıtlamalar ön kamerası olan laptoplarda OverconstrainedError oluşmasını engeller.
         const constraints = {
           video: { facingMode: { ideal: 'environment' } },
           audio: false
@@ -2303,17 +2301,24 @@
         try {
           cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch (e) {
-          console.warn("Arka kamera (environment) kısıtlaması başarısız oldu, varsayılan kamera deneniyor...", e);
-          // Fallback zinciri: Cihazın varsayılan kamerasını aç
+          console.warn("Arka kamera kısıtlaması başarısız, varsayılan deneniyor...", e);
           cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
         
         videoEl.srcObject = cameraStream;
-        videoEl.setAttribute('playsinline', true);
-        videoEl.setAttribute('autoplay', true);
-        videoEl.setAttribute('muted', true);
         
-        await videoEl.play();
+        // iOS ve Safari uyumluluğu için property olarak ayarlanmalı
+        videoEl.playsInline = true;
+        videoEl.autoplay = true;
+        videoEl.muted = true;
+        
+        // play() fonksiyonu eski tarayıcılarda promise dönmeyebilir
+        const playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+          await playPromise.catch(e => {
+            console.warn("Kamera otomatik oynatma engellendi:", e);
+          });
+        }
         
         videoEl.style.display = 'block';
         fallbackUi.style.display = 'none';
@@ -2323,7 +2328,7 @@
         console.error("Kamera başlatma hatası:", err);
         videoEl.style.display = 'none';
         fallbackUi.style.display = 'flex';
-        showToast("Kamera erişimi sağlanamadı. Lütfen izinleri kontrol edin.");
+        showToast("Kamera erişimi reddedildi veya bulunamadı.");
       }
     }
 
