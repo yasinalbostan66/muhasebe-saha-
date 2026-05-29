@@ -2313,7 +2313,6 @@
         videoEl.setAttribute('autoplay', true);
         videoEl.setAttribute('muted', true);
         
-        // iOS Safari için oynatmayı garantiye alalım
         await videoEl.play();
         
         videoEl.style.display = 'block';
@@ -2321,10 +2320,10 @@
         
         startDetectionSimulator();
       } catch (err) {
-        console.warn("Kameraya erişilemedi, simülatör modu devrede:", err);
+        console.error("Kamera başlatma hatası:", err);
         videoEl.style.display = 'none';
         fallbackUi.style.display = 'flex';
-        showToast("Kamera açılamadı, simülatör devrede.");
+        showToast("Kamera erişimi sağlanamadı. Lütfen izinleri kontrol edin.");
       }
     }
 
@@ -2334,7 +2333,6 @@
         cameraStream = null;
       }
       stopDetectionSimulator();
-      stopQrCodeScanner();
     }
 
     let detectionInterval = null;
