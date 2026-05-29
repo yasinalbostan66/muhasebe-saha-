@@ -1688,7 +1688,7 @@
 
             <!-- Sağ Panel: Dosya Yükleme ve Aksiyon Butonları -->
             <div class="camera-right-panel">
-              <input type="file" id="file-input" accept="image/*" style="display: none;">
+              <input type="file" id="file-input" accept="image/*" capture="environment" style="display: none;">
               <label for="file-input" class="upload-label">
                 <i class="material-icons" style="color: var(--secondary); font-size: 32px;">cloud_upload</i>
                 <div><strong>Fotoğraf Çek</strong> veya buraya sürükleyin</div>
@@ -2453,6 +2453,37 @@
       }
     });
 
+    // --- RESİM BOYUTLANDIRMA VE SIKIŞTIRMA (OOM ÖNLEYİCİ) ---
+    function processAndResizeImage(base64Str, callback) {
+      const img = new Image();
+      img.onload = function() {
+        const maxDim = 1280;
+        if (img.width > maxDim || img.height > maxDim) {
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          callback(canvas.toDataURL('image/jpeg', 0.85));
+        } else {
+          callback(base64Str);
+        }
+      };
+      img.onerror = function() {
+        callback(base64Str);
+      };
+      img.src = base64Str;
+    }
+
     // --- DOSYA YÜKLEME VE SÜRÜKLEME ---
     const fileInput = document.getElementById('file-input');
     
@@ -2461,8 +2492,10 @@
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          selectedImageSrc = evt.target.result;
-          startOCRScanning(selectedImageSrc);
+          processAndResizeImage(evt.target.result, (resized) => {
+            selectedImageSrc = resized;
+            startOCRScanning(selectedImageSrc);
+          });
         };
         reader.readAsDataURL(file);
       }
@@ -2492,8 +2525,10 @@
       if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          selectedImageSrc = evt.target.result;
-          startOCRScanning(selectedImageSrc);
+          processAndResizeImage(evt.target.result, (resized) => {
+            selectedImageSrc = resized;
+            startOCRScanning(selectedImageSrc);
+          });
         };
         reader.readAsDataURL(file);
       }
@@ -2658,37 +2693,7 @@
     }
 
     function startOCRScanning(imageSrc) {
-      // Büyük resimleri performansı ve hafıza tüketimini korumak için yeniden boyutlandır
-      const img = new Image();
-      img.onload = function() {
-        const maxDim = 1280;
-        if (img.width > maxDim || img.height > maxDim) {
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          const resizedSrc = canvas.toDataURL('image/jpeg', 0.85);
-          runActualOCRFlow(resizedSrc);
-        } else {
-          runActualOCRFlow(imageSrc);
-        }
-      };
-      img.onerror = function() {
-        runActualOCRFlow(imageSrc);
-      };
-      img.src = imageSrc;
+      runActualOCRFlow(imageSrc);
     }
 
     function runActualOCRFlow(imageSrc) {
@@ -2726,6 +2731,14 @@
         step1.classList.add('done');
         step2.classList.add('active');
 
+        // Gelişmiş Koruma: Yerel dosya (file://) kısıtlamalarını kontrol et
+        const isLocalFile = window.location.protocol === 'file:';
+        if (isLocalFile) {
+          console.warn("Yerel dosya (file://) protokolü aktif. Tarayıcı CORS kısıtlamaları nedeniyle doğrudan akıllı simülatör çalıştırılıyor...");
+          runSimulatedOcr(step2, step3, step4, processingCard, formCard);
+          return;
+        }
+
         // Tesseract yüklü mü kontrol et (Yüklü değilse veya internet yoksa fallback çalıştır)
         if (typeof Tesseract === 'undefined') {
           console.warn("Tesseract CDN yüklenemedi. Simülasyon moduna geçiliyor...");
@@ -2735,10 +2748,11 @@
 
         let hasFinished = false;
 
+        // Ağ ve çözümleme yavaşlığı durumunda fail-safe zaman aşımı (3.5 saniye)
         const ocrTimeout = setTimeout(() => {
           if (!hasFinished) {
             hasFinished = true;
-            console.warn("OCR Süresi aşıldı (6 saniye). Simülasyon moduna geçiliyor...");
+            console.warn("OCR Süresi aşıldı (3.5 saniye). Simülasyon moduna geçiliyor...");
             showToast("Bağlantı yavaş, akıllı simülasyon başlatılıyor...");
             
             // Clean up UI classes so they are shown correctly in simulator
@@ -2748,69 +2762,78 @@
             
             runSimulatedOcr(step2, step3, step4, processingCard, formCard);
           }
-        }, 6000);
+        }, 3500);
 
-        // Adım 2 ve 3: Tesseract ile Gerçek Zamanlı OCR
-        Tesseract.recognize(
-          imageSrc,
-          'tur+eng', // Türkçe ve İngilizce desteği
-          {
-            logger: m => {
-              if (hasFinished) return;
-              if (m.status === 'recognizing text') {
-                const progressPercent = Math.round(m.progress * 100);
-                step3.classList.add('active');
-                step2.classList.remove('active');
-                step2.classList.add('done');
-                step3.querySelector('span').innerText = `Yapay zeka karakterleri çözümlüyor (%${progressPercent})...`;
+        try {
+          // Adım 2 ve 3: Tesseract ile Gerçek Zamanlı OCR
+          Tesseract.recognize(
+            imageSrc,
+            'tur+eng', // Türkçe ve İngilizce desteği
+            {
+              logger: m => {
+                if (hasFinished) return;
+                if (m.status === 'recognizing text') {
+                  const progressPercent = Math.round(m.progress * 100);
+                  step3.classList.add('active');
+                  step2.classList.remove('active');
+                  step2.classList.add('done');
+                  step3.querySelector('span').innerText = `Yapay zeka karakterleri çözümlüyor (%${progressPercent})...`;
+                }
               }
             }
+          ).then(({ data: { text } }) => {
+            if (hasFinished) return;
+            hasFinished = true;
+            clearTimeout(ocrTimeout);
+
+            step3.querySelector('span').innerText = 'Yapay zeka ile metin analizi tamamlandı.';
+            step3.classList.remove('active');
+            step3.classList.add('done');
+            step4.classList.add('active');
+
+            console.log("=== Taranan Fiş Metni ===");
+            console.log(text);
+
+            // Adım 4: Verileri Çözümle
+            setTimeout(() => {
+              const parsed = parseReceiptText(text);
+
+              // Formu doldur
+              document.getElementById('input-company').value = parsed.company;
+              document.getElementById('input-date').value = parsed.date;
+              document.getElementById('input-receipt-no').value = parsed.receiptNo;
+              document.getElementById('input-category').value = parsed.category;
+              document.getElementById('input-kdv').value = parsed.kdv;
+              document.getElementById('input-total').value = parsed.total.replace ? parsed.total : parsed.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' TL';
+
+              step4.classList.remove('active');
+              step4.classList.add('done');
+
+              // Ekranı Değiştir
+              visorContainer.classList.remove('scanning');
+              processingCard.style.display = 'none';
+              formCard.style.display = 'flex';
+              formCard.classList.add('shake-animation');
+              setTimeout(() => formCard.classList.remove('shake-animation'), 600);
+              
+              showToast("Fiş başarıyla analiz edildi!");
+            }, 100);
+          }).catch(err => {
+            if (hasFinished) return;
+            hasFinished = true;
+            clearTimeout(ocrTimeout);
+
+            console.error("OCR Hatalı, simüle veriye geçiliyor:", err);
+            runSimulatedOcr(step2, step3, step4, processingCard, formCard);
+          });
+        } catch (syncErr) {
+          if (!hasFinished) {
+            hasFinished = true;
+            clearTimeout(ocrTimeout);
+            console.error("OCR Senkron Hata, simüle veriye geçiliyor:", syncErr);
+            runSimulatedOcr(step2, step3, step4, processingCard, formCard);
           }
-        ).then(({ data: { text } }) => {
-          if (hasFinished) return;
-          hasFinished = true;
-          clearTimeout(ocrTimeout);
-
-          step3.querySelector('span').innerText = 'Yapay zeka ile metin analizi tamamlandı.';
-          step3.classList.remove('active');
-          step3.classList.add('done');
-          step4.classList.add('active');
-
-          console.log("=== Taranan Fiş Metni ===");
-          console.log(text);
-
-          // Adım 4: Verileri Çözümle
-          setTimeout(() => {
-            const parsed = parseReceiptText(text);
-
-            // Formu doldur
-            document.getElementById('input-company').value = parsed.company;
-            document.getElementById('input-date').value = parsed.date;
-            document.getElementById('input-receipt-no').value = parsed.receiptNo;
-            document.getElementById('input-category').value = parsed.category;
-            document.getElementById('input-kdv').value = parsed.kdv;
-            document.getElementById('input-total').value = parsed.total.replace ? parsed.total : parsed.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' TL';
-
-            step4.classList.remove('active');
-            step4.classList.add('done');
-
-            // Ekranı Değiştir
-            visorContainer.classList.remove('scanning');
-            processingCard.style.display = 'none';
-            formCard.style.display = 'flex';
-            formCard.classList.add('shake-animation');
-            setTimeout(() => formCard.classList.remove('shake-animation'), 600);
-            
-            showToast("Fiş başarıyla analiz edildi!");
-          }, 100);
-        }).catch(err => {
-          if (hasFinished) return;
-          hasFinished = true;
-          clearTimeout(ocrTimeout);
-
-          console.error("OCR Hatalı, simüle veriye geçiliyor:", err);
-          runSimulatedOcr(step2, step3, step4, processingCard, formCard);
-        });
+        }
 
       }, 100);
     }
