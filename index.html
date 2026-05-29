@@ -1482,6 +1482,25 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
+  <div id="mobile-debug" style="position:fixed;top:0;left:0;width:100%;max-height:50%;overflow-y:auto;background:rgba(0,0,0,0.8);color:#0f0;font-size:10px;z-index:99999;pointer-events:none;display:block;"></div>
+  <script>
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      const d = document.getElementById('mobile-debug');
+      if(d) d.innerHTML += '<br>ERR: ' + msg + ' at ' + lineNo + ':' + columnNo;
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const d = document.getElementById('mobile-debug');
+      if(d) d.innerHTML += '<br>PROMISE ERR: ' + (event.reason && event.reason.message ? event.reason.message : event.reason);
+    });
+    const oldLog = console.log;
+    const oldWarn = console.warn;
+    const oldErr = console.error;
+    console.log = function(...args) { oldLog(...args); const d = document.getElementById('mobile-debug'); if(d) d.innerHTML += '<br>LOG: ' + args.join(' '); };
+    console.warn = function(...args) { oldWarn(...args); const d = document.getElementById('mobile-debug'); if(d) d.innerHTML += '<br>WARN: ' + args.join(' '); };
+    console.error = function(...args) { oldErr(...args); const d = document.getElementById('mobile-debug'); if(d) d.innerHTML += '<br><span style="color:red">ERR: ' + args.join(' ') + '</span>'; };
+  </script>
+
 
 
   <!-- RESPONSIVE HYBRID KAPSAYICI -->
@@ -2675,7 +2694,10 @@
       _tesseractLoading = true;
       try {
         _tesseractWorker = await Tesseract.createWorker('tur', 1, {
-          logger: () => {} // tur yeterli, daha az RAM/CPU harcar
+          workerPath: './tesseract/worker.min.js',
+          langPath: './tesseract',
+          corePath: './tesseract/tesseract-core.wasm.js',
+          logger: () => {}
         });
         _tesseractReady = true;
         console.log('✓ Tesseract OCR motoru hazır');
@@ -2735,9 +2757,12 @@
             await new Promise((res, rej) => {
               const timeout = setTimeout(() => rej(new Error('timeout')), 60000);
               Tesseract.createWorker('tur', 1, {
+                workerPath: './tesseract/worker.min.js',
+                langPath: './tesseract',
+                corePath: './tesseract/tesseract-core.wasm.js',
                 logger: m => {
                   if (m.status === 'loading tesseract core') step2.querySelector('span').innerText = 'OCR çekirdeği yükleniyor...';
-                  if (m.status === 'loading language traineddata') step2.querySelector('span').innerText = 'Türkçe modeli indiriliyor...';
+                  if (m.status === 'loading language traineddata') step2.querySelector('span').innerText = 'Türkçe modeli yükleniyor...';
                   if (m.status === 'initializing tesseract') step2.querySelector('span').innerText = 'OCR başlatılıyor...';
                   if (m.status === 'recognizing text') {
                     step2.classList.remove('active');
