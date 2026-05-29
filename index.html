@@ -2592,7 +2592,7 @@
 
       setTimeout(() => {
         startOCRScanning(selectedImageSrc);
-      }, 500);
+      }, 100);
     });
 
     let flashOn = false;
@@ -2949,13 +2949,13 @@
             setTimeout(() => formCard.classList.remove('shake-animation'), 600);
             
             showToast("Fiş başarıyla analiz edildi!");
-          }, 1000);
+          }, 100);
         }).catch(err => {
           console.error("OCR Hatalı, simüle veriye geçiliyor:", err);
           runSimulatedOcr(step2, step3, step4, processingCard, formCard);
         });
 
-      }, 1000);
+      }, 100);
     }
 
     // Fail-safe Hızlı OCR Simülatör Fallback
@@ -2982,9 +2982,9 @@
             formCard.style.display = 'flex';
             formCard.classList.add('shake-animation');
             setTimeout(() => formCard.classList.remove('shake-animation'), 600);
-          }, 1000);
-        }, 1200);
-      }, 1000);
+          }, 200);
+        }, 250);
+      }, 200);
     }
 
     const mockCompanies = ['OPET AKARYAKIT A.Ş.', 'MİGROS SÜPERMARKET', 'CARREFOURSA', 'STARBUCKS COFFEE', 'TEKNOSA MAĞAZACILIK', 'BİM BİRLEŞİK MAĞAZALAR'];
