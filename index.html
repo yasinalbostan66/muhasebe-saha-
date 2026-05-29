@@ -53,6 +53,7 @@
       --cat-tatil: #06b6d4;
       --cat-teknoloji: #f43f5e;
       --cat-hobiler: #84cc16;
+      --cat-disarda-yemek: #ea580c;
       --cat-diger: #94a3b8;
     }
 
@@ -785,6 +786,7 @@
     .receipt-icon.tatil { background: rgba(6, 182, 212, 0.12); color: var(--cat-tatil); }
     .receipt-icon.teknoloji { background: rgba(244, 63, 94, 0.12); color: var(--cat-teknoloji); }
     .receipt-icon.hobiler { background: rgba(132, 204, 22, 0.12); color: var(--cat-hobiler); }
+    .receipt-icon.disarda-yemek { background: rgba(234, 88, 12, 0.12); color: var(--cat-disarda-yemek); }
     .receipt-icon.diger { background: rgba(148, 163, 184, 0.12); color: var(--cat-diger); }
 
     .receipt-info {
@@ -1555,6 +1557,7 @@
                   <button class="tab-btn" data-filter="Tatil">Tatil</button>
                   <button class="tab-btn" data-filter="Teknoloji">Teknoloji</button>
                   <button class="tab-btn" data-filter="Hobiler">Hobiler</button>
+                  <button class="tab-btn" data-filter="Dışarıda yeme-içme">Dışarıda yeme-içme</button>
                   <button class="tab-btn" data-filter="Diğer">Diğer</button>
                 </div>
 
@@ -1733,6 +1736,7 @@
                       <option value="Tatil">Tatil</option>
                       <option value="Teknoloji">Teknoloji</option>
                       <option value="Hobiler">Hobiler</option>
+                      <option value="Dışarıda yeme-içme">Dışarıda yeme-içme</option>
                       <option value="Diğer">Diğer</option>
                     </select>
                   </div>
@@ -1844,7 +1848,7 @@
     const defaultReceipts = [
       { id: 1, company: 'MİGROS TİCARET A.Ş.', date: '29.05.2026', receiptNo: '0032', kdv: '%20', amount: 642.80, icon: 'shopping_basket', category: 'Gıda' },
       { id: 2, company: 'SHELL PETROL A.Ş.', date: '28.05.2026', receiptNo: '0412', kdv: '%20', amount: 2450.00, icon: 'local_gas_station', category: 'Akaryakıt/Ulaşım' },
-      { id: 3, company: 'STARBUCKS KAHVE', date: '28.05.2026', receiptNo: '0004', kdv: '%10', amount: 185.00, icon: 'restaurant', category: 'Yemek Dışarı' }
+      { id: 3, company: 'STARBUCKS KAHVE', date: '28.05.2026', receiptNo: '0004', kdv: '%10', amount: 185.00, icon: 'local_cafe', category: 'Dışarıda yeme-içme' }
     ];
 
     function loadReceipts() {
@@ -1890,6 +1894,7 @@
         'Tatil': { amount: 0, color: 'var(--cat-tatil)', icon: 'flight' },
         'Teknoloji': { amount: 0, color: 'var(--cat-teknoloji)', icon: 'devices' },
         'Hobiler': { amount: 0, color: 'var(--cat-hobiler)', icon: 'sports_soccer' },
+        'Dışarıda yeme-içme': { amount: 0, color: 'var(--cat-disarda-yemek)', icon: 'local_cafe' },
         'Diğer': { amount: 0, color: 'var(--cat-diger)', icon: 'payments' }
       };
 
@@ -2019,6 +2024,7 @@
         else if (cat === 'Tatil') { catClass = 'tatil'; iconName = 'flight'; }
         else if (cat === 'Teknoloji') { catClass = 'teknoloji'; iconName = 'devices'; }
         else if (cat === 'Hobiler') { catClass = 'hobiler'; iconName = 'sports_soccer'; }
+        else if (cat === 'Dışarıda yeme-içme') { catClass = 'disarda-yemek'; iconName = 'local_cafe'; }
 
         // Icon değerlerini çalışma zamanında eşleştir
         receipt.icon = iconName;
@@ -2476,7 +2482,10 @@
       } else if (lowerCompany.includes('petrol') || lowerCompany.includes('opet') || lowerCompany.includes('shell') || lowerCompany.includes('bp') || lowerCompany.includes('aygaz') || lowerCompany.includes('lukoil') || lowerCompany.includes('akaryakit') || lowerCompany.includes('yakit') || lowerCompany.includes('istasyon') || lowerCompany.includes('otogaz') || lowerCompany.includes('yakıt') || lowerCompany.includes('akaryakıt') || lowerCompany.includes('taksi') || lowerCompany.includes('uber') || lowerCompany.includes('bitaksi') || lowerCompany.includes('otopark') || lowerCompany.includes('hgs') || lowerCompany.includes('metro') || lowerCompany.includes('bilet') || lowerCompany.includes('havalimani') || lowerCompany.includes('havalimanı')) {
         category = 'Akaryakıt/Ulaşım';
         kdv = '%20';
-      } else if (lowerCompany.includes('cafe') || lowerCompany.includes('kahve') || lowerCompany.includes('starbucks') || lowerCompany.includes('restaurant') || lowerCompany.includes('restoran') || lowerCompany.includes('yemek') || lowerCompany.includes('döner') || lowerCompany.includes('doner') || lowerCompany.includes('pizz') || lowerCompany.includes('burger') || lowerCompany.includes('kfc') || lowerCompany.includes('mcdonald') || lowerCompany.includes('pastane') || lowerCompany.includes('börek') || lowerCompany.includes('borek') || lowerCompany.includes('donas') || lowerCompany.includes('köfte') || lowerCompany.includes('kofte') || lowerCompany.includes('rest') || lowerCompany.includes('lokanta')) {
+      } else if (lowerCompany.includes('cafe') || lowerCompany.includes('kahve') || lowerCompany.includes('starbucks') || lowerCompany.includes('pastane') || lowerCompany.includes('börek') || lowerCompany.includes('borek') || lowerCompany.includes('fırın') || lowerCompany.includes('firin') || lowerCompany.includes('tatlı') || lowerCompany.includes('tatli') || lowerCompany.includes('waffle') || lowerCompany.includes('dondurma') || lowerCompany.includes('çay') || lowerCompany.includes('cay') || lowerCompany.includes('bistro') || lowerCompany.includes('kahvaltı') || lowerCompany.includes('kahvalti') || lowerCompany.includes('simit') || lowerCompany.includes('mado') || lowerCompany.includes('kahveci')) {
+        category = 'Dışarıda yeme-içme';
+        kdv = '%10';
+      } else if (lowerCompany.includes('restaurant') || lowerCompany.includes('restoran') || lowerCompany.includes('yemek') || lowerCompany.includes('döner') || lowerCompany.includes('doner') || lowerCompany.includes('pizz') || lowerCompany.includes('burger') || lowerCompany.includes('kfc') || lowerCompany.includes('mcdonald') || lowerCompany.includes('köfte') || lowerCompany.includes('kofte') || lowerCompany.includes('rest') || lowerCompany.includes('lokanta') || lowerCompany.includes('kebap') || lowerCompany.includes('pide') || lowerCompany.includes('lahmacun') || lowerCompany.includes('çorbacı') || lowerCompany.includes('corbaci') || lowerCompany.includes('donas')) {
         category = 'Yemek Dışarı';
         kdv = '%10';
       } else if (lowerCompany.includes('migros') || lowerCompany.includes('bim') || lowerCompany.includes('sok') || lowerCompany.includes('şok') || lowerCompany.includes('a101') || lowerCompany.includes('carrefour') || lowerCompany.includes('market') || lowerCompany.includes('hipermarket') || lowerCompany.includes('gida') || lowerCompany.includes('gıda') || lowerCompany.includes('magaza') || lowerCompany.includes('mağaza') || lowerCompany.includes('manav') || lowerCompany.includes('kasap') || lowerCompany.includes('şarküteri') || lowerCompany.includes('sarkuteri') || lowerCompany.includes('tekel')) {
