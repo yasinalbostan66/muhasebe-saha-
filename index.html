@@ -110,43 +110,20 @@
       font-family: 'Outfit', sans-serif;
     }
 
-    /* --- CİHAZ ÇERÇEVESİ (MOBILE WRAPPER) --- */
+    /* --- UYGULAMA ÇERÇEVESİ (TAM EKRAN YAPILDI) --- */
     .app-container {
-      width: 100%;
-      max-width: 440px;
-      height: 900px;
-      max-height: 95vh;
+      width: 100vw;
+      height: 100vh;
       background-color: var(--bg-dark);
-      border: 8px solid var(--phone-border);
-      border-radius: 40px;
-      box-shadow: 0 25px 60px -15px var(--panel-shadow), 0 0 40px rgba(79, 70, 229, 0.05);
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* Notch Tasarımı */
+    /* Notch Gizlendi */
     .notch {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 150px;
-      height: 25px;
-      background-color: var(--phone-border);
-      border-bottom-left-radius: 18px;
-      border-bottom-right-radius: 18px;
-      z-index: 999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .notch-camera {
-      width: 8px;
-      height: 8px;
-      background-color: #0d131f;
-      border-radius: 50%;
+      display: none;
     }
 
     /* --- EKRAN YÖNETİMİ --- */
@@ -162,7 +139,7 @@
       pointer-events: none;
       transform: scale(0.96);
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      padding-top: 35px; /* Notch payı */
+      padding-top: 0; /* Kaldırıldı */
       background-color: var(--bg-dark);
     }
 
@@ -677,8 +654,10 @@
     .drawer-sheet {
       position: absolute;
       bottom: 0;
-      left: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
       width: 100%;
+      max-width: 500px;
       max-height: 82%;
       background-color: var(--bg-dark);
       border-top: 1px solid var(--border-color);
@@ -686,14 +665,13 @@
       border-top-right-radius: 30px;
       box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.5);
       z-index: 160;
-      transform: translateY(100%);
       transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
       display: flex;
       flex-direction: column;
     }
 
     .drawer-overlay.active .drawer-sheet {
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
     }
 
     .drawer-header {
